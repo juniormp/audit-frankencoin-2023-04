@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.0; // @audit-ok no floating point @audit-ok latest version
 
 import "./IERC20.sol";
 import "./IPosition.sol";
@@ -106,7 +106,7 @@ contract Position is Ownable, IPosition, MathUtil {
     /**
      * Qualified pool share holders can call this method to immediately expire a freshly proposed position.
      */ 
-    function deny(address[] calldata helpers, string calldata message) public {
+    function deny(address[] calldata helpers, string calldata message) public { // @audit-ok can be changed to external
         if (block.timestamp >= start) revert TooLate();
         IReserve(zchf.reserve()).checkQualified(msg.sender, helpers);
         cooldown = expiration; // since expiration is immutable, we put it under cooldown until the end
@@ -119,9 +119,9 @@ contract Position is Ownable, IPosition, MathUtil {
      */
     function getUsableMint(uint256 totalMint, bool afterFees) public view returns (uint256){
         if (afterFees){
-            return totalMint * (1000_000 - reserveContribution - calculateCurrentFee()) / 1000_000;
+            return totalMint * (1000_000 - reserveContribution - calculateCurrentFee()) / 1000_000; // @audit-ok magic number
         } else {
-            return totalMint * (1000_000 - reserveContribution) / 1000_000;
+            return totalMint * (1000_000 - reserveContribution) / 1000_000; // @audit-ok magic number
         }
     }
 
@@ -129,7 +129,7 @@ contract Position is Ownable, IPosition, MathUtil {
      * "All in one" function to adjust the outstanding amount of ZCHF, the collateral amount, 
      * and the price in one transaction.
      */
-    function adjust(uint256 newMinted, uint256 newCollateral, uint256 newPrice) public onlyOwner {
+    function adjust(uint256 newMinted, uint256 newCollateral, uint256 newPrice) public onlyOwner { // @audit-ok change to external
         if (newPrice != price){
             adjustPrice(newPrice);
         }
@@ -156,7 +156,7 @@ contract Position is Ownable, IPosition, MathUtil {
      * Lowering the liquidation price can be done with immediate effect, given that there is enough collateral.
      * Increasing the liquidation price triggers a cooldown period of 3 days, during which minting is suspended.
      */
-    function adjustPrice(uint256 newPrice) public onlyOwner noChallenge {
+    function adjustPrice(uint256 newPrice) public onlyOwner noChallenge { // @audit-ok should be internal
         if (newPrice > price) {
             restrictMinting(3 days);
         } else {
@@ -387,6 +387,6 @@ contract Position is Ownable, IPosition, MathUtil {
     modifier onlyHub() {
         if (msg.sender != address(hub)) revert NotHub();
         _;
-    }
+    } // @audit-ok move mofifiers to top
 
 }

@@ -7,8 +7,8 @@ pragma solidity >=0.8.0 <0.9.0;
  */
 contract MathUtil {
 
-    uint256 internal constant ONE_DEC18 = 10**18;
-    uint256 internal constant THRESH_DEC18 =  10000000000000000;//0.01
+    uint256 internal constant ONE_DEC18 = 10**18; // @audit-ok use scientific nottion
+    uint256 internal constant THRESH_DEC18 =  10000000000000000;//0.01 @audit-ok use scientific nottion
     /**
      * @notice Cubic root with Halley approximation
      *         Number 1e18 decimal
