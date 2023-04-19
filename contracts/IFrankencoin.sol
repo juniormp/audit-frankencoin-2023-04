@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.0; // @audit-ok no floating point @audit-ok latest version
 
 import "./IERC20.sol";
 import "./IReserve.sol";

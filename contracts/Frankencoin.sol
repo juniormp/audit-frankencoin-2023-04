@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.0; // @audit-ok no floating point @audit-ok latest version
 
 import "./ERC20PermitLight.sol";
 import "./Equity.sol";
@@ -22,7 +22,7 @@ contract Frankencoin is ERC20PermitLight, IFrankencoin {
    /**
     * Minimal fee and application period when suggesting a new minter.
     */
-   uint256 public constant MIN_FEE = 1000 * (10**18);
+   uint256 public constant MIN_FEE = 1000 * (10**18); // @audit-ok use scientific notation instead 1^18
    uint256 public immutable MIN_APPLICATION_PERIOD; // for example 10 days
 
    /**
@@ -81,15 +81,15 @@ contract Frankencoin is ERC20PermitLight, IFrankencoin {
     * minter.
     */
    function suggestMinter(address _minter, uint256 _applicationPeriod, uint256 _applicationFee, string calldata _message) override external {
-      if (_applicationPeriod < MIN_APPLICATION_PERIOD && totalSupply() > 0) revert PeriodTooShort();
-      if (_applicationFee < MIN_FEE  && totalSupply() > 0) revert FeeTooLow();
+      if (_applicationPeriod < MIN_APPLICATION_PERIOD && totalSupply() > 0) revert PeriodTooShort(); // @audit-ok [gas] @split ifs
+      if (_applicationFee < MIN_FEE  && totalSupply() > 0) revert FeeTooLow(); // @audit-ok [gas] @split ifs
       if (minters[_minter] != 0) revert AlreadyRegistered();
       _transfer(msg.sender, address(reserve), _applicationFee);
       minters[_minter] = block.timestamp + _applicationPeriod;
       emit MinterApplied(_minter, _applicationPeriod, _applicationFee, _message);
    }
 
-   error PeriodTooShort();
+   error PeriodTooShort(); // @audit-ok move erros to top
    error FeeTooLow();
    error AlreadyRegistered();
 
@@ -103,7 +103,7 @@ contract Frankencoin is ERC20PermitLight, IFrankencoin {
       uint256 explicit = super.allowanceInternal(owner, spender);
       if (explicit > 0){
          return explicit; // don't waste gas checking minter
-      } else if (isMinter(spender) || isMinter(isPosition(spender))){
+      } else if (isMinter(spender) || isMinter(isPosition(spender))){ 
          return INFINITY;
       } else {
          return 0;
@@ -127,7 +127,7 @@ contract Frankencoin is ERC20PermitLight, IFrankencoin {
       positions[_position] = msg.sender;
    }
 
-   error NotMinter();
+   error NotMinter(); // @audit-ok move to top
 
    /**
     * The amount of equity of the Frankencoin system in ZCHF, owned by the holders of Frankencoin Pool Shares.
@@ -264,7 +264,7 @@ contract Frankencoin is ERC20PermitLight, IFrankencoin {
    }
 
    modifier minterOnly() {
-      if (!isMinter(msg.sender) && !isMinter(positions[msg.sender])) revert NotMinter();
+      if (!isMinter(msg.sender) && !isMinter(positions[msg.sender])) revert NotMinter(); // @audit-ok split ifs
       _;
    }
 

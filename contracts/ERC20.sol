@@ -9,7 +9,7 @@
 // - let name() and symbol() be implemented by subclass
 // - infinite allowance support, with 2^255 and above considered infinite
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.0; // @audit-ok no floating point @audit-ok latest version
 
 import "./IERC20.sol";
 import "./IERC677Receiver.sol";
@@ -38,7 +38,7 @@ import "./IERC677Receiver.sol";
  * allowances. See `IERC20.approve`.
  */
 
-abstract contract ERC20 is IERC20 {
+abstract contract ERC20 is IERC20 { // @audit-ok use open zeppelin ERC20
 
     mapping (address => uint256) private _balances;
 

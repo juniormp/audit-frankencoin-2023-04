@@ -6,7 +6,7 @@
 // - Replaced Context._msgSender() with msg.sender
 // - Made leaner
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.0; // @audit-ok no floating point @audit-ok latest version
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
@@ -16,7 +16,7 @@ pragma solidity ^0.8.0;
  * By default, the owner account will be the one that deploys the contract. This
  * can later be changed with {transferOwnership}.
  */
-contract Ownable {
+contract Ownable { // @audit-ok use open zeppelin ownable 
 
     address public owner;
 

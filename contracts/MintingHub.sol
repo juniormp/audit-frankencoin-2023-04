@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.0; // @audit-ok no floating point @audit-ok latest version
 
 import "./IERC20.sol";
 import "./IReserve.sol";
@@ -17,13 +17,13 @@ contract MintingHub {
     /**
      * Irrevocable fee in ZCHF when proposing a new position (but not when cloning an existing one).
      */
-    uint256 public constant OPENING_FEE = 1000 * 10**18;
+    uint256 public constant OPENING_FEE = 1000 * 10**18; // @audit-ok scientific notation
 
     /**
      * The challenger reward in parts per million (ppm) relative to the challenged amount, whereas
      * challenged amount if defined as the challenged collateral amount times the liquidation price.
      */
-    uint32 public constant CHALLENGER_REWARD = 20000; // 2%
+    uint32 public constant CHALLENGER_REWARD = 20000; // 2% // @audit-ok magic number change to constanst
 
     IPositionFactory private immutable POSITION_FACTORY; // position contract to clone
 
@@ -88,7 +88,7 @@ contract MintingHub {
     function openPosition(
         address _collateralAddress, uint256 _minCollateral, uint256 _initialCollateral,
         uint256 _mintingMaximum, uint256 _initPeriodSeconds, uint256 _expirationSeconds, uint256 _challengeSeconds,
-        uint32 _mintingFeePPM, uint256 _liqPrice, uint32 _reservePPM) public returns (address) {
+        uint32 _mintingFeePPM, uint256 _liqPrice, uint32 _reservePPM) public returns (address) { // @audit-ok do not need to be public change to external
         IPosition pos = IPosition(
             POSITION_FACTORY.createNewPosition(
                 msg.sender,
@@ -106,16 +106,16 @@ contract MintingHub {
         );
         zchf.registerPosition(address(pos));
         zchf.transferFrom(msg.sender, address(zchf.reserve()), OPENING_FEE);
-        require(_initialCollateral >= _minCollateral, "must start with min col");
+        require(_initialCollateral >= _minCollateral, "must start with min col"); // @audit-0k use error instead
         IERC20(_collateralAddress).transferFrom(msg.sender, address(pos), _initialCollateral);
 
         return address(pos);
     }
 
     modifier validPos(address position) {
-        require(zchf.isPosition(position) == address(this), "not our pos");
+        require(zchf.isPosition(position) == address(this), "not our pos"); // @audit-ok use error instead
         _;
-    }
+    } // @audit-ok move to top
 
     /**
      * Clones an existing position and immediately tries to mint the specified amount using the given amount of collateral.
@@ -155,7 +155,7 @@ contract MintingHub {
      */
     function splitChallenge(uint256 _challengeNumber, uint256 splitOffAmount) external returns (uint256) {
         Challenge storage challenge = challenges[_challengeNumber];
-        require(challenge.challenger != address(0x0));
+        require(challenge.challenger != address(0x0)); // @audit-ok use error instead
         Challenge memory copy = Challenge(
             challenge.challenger,
             challenge.position,
@@ -186,7 +186,7 @@ contract MintingHub {
      * The minimum bid size for the next bid. It must be 0.5% higher than the previous bid.
      */
     function minBid(Challenge storage challenge) internal view returns (uint256) {
-        return (challenge.bid * 1005) / 1000;
+        return (challenge.bid * 1005) / 1000; // @audit-ok magic number transform to constant
     }
 
     /**
@@ -230,7 +230,7 @@ contract MintingHub {
 
     error TooLate();
     error UnexpectedSize();
-    error BidTooLow(uint256 bid, uint256 min);
+    error BidTooLow(uint256 bid, uint256 min); // @audit-ok move errors to top
 
     function end(uint256 _challengeNumber) external {
         end(_challengeNumber, false);
@@ -249,10 +249,10 @@ contract MintingHub {
      *
      * @param postponeCollateralReturn Can be used to postpone the return of the collateral to the challenger. Usually false. 
      */
-    function end(uint256 _challengeNumber, bool postponeCollateralReturn) public {
+    function end(uint256 _challengeNumber, bool postponeCollateralReturn) public { 
         Challenge storage challenge = challenges[_challengeNumber];
-        require(challenge.challenger != address(0x0));
-        require(block.timestamp >= challenge.end, "period has not ended");
+        require(challenge.challenger != address(0x0)); // @audit-ok use error instead
+        require(block.timestamp >= challenge.end, "period has not ended"); // @audit-ok use error instead
         // challenge must have been successful, because otherwise it would have immediately ended on placing the winning bid
         returnCollateral(challenge, postponeCollateralReturn);
         // notify the position that will send the collateral to the bidder. If there is no bid, send the collateral to msg.sender
@@ -262,7 +262,7 @@ contract MintingHub {
             // overbid, return excess amount
             IERC20(zchf).transfer(challenge.bidder, challenge.bid - effectiveBid);
         }
-        uint256 reward = (volume * CHALLENGER_REWARD) / 1000_000;
+        uint256 reward = (volume * CHALLENGER_REWARD) / 1000_000; // @audit-ok magic number use constanst instead
         uint256 fundsNeeded = reward + repayment;
         if (effectiveBid > fundsNeeded){
             zchf.transfer(owner, effectiveBid - fundsNeeded);
